@@ -1,30 +1,33 @@
 import tensorflow as tf
 import time
 
-# Configuración: Matrices de 10k x 10k (ocupan mucha VRAM y núcleos)
 SIZE = 10000 
 ITERATIONS = 100 
 
-print(f"🚀 Iniciando test de estrés en la RTX 3080 Ti...")
-print(f"Operación: {ITERATIONS} multiplicaciones de matrices de {SIZE}x{SIZE}")
+print(f"🚀 Test de Estrés Real en la RTX 3080 Ti...")
 
 with tf.device('/GPU:0'):
-    # Inicializamos las matrices en la GPU
-    matrix1 = tf.random.normal([SIZE, SIZE])
-    matrix2 = tf.random.normal([SIZE, SIZE])
+    # Matrices iniciales
+    a = tf.random.normal([SIZE, SIZE])
+    b = tf.random.normal([SIZE, SIZE])
 
     start_time = time.time()
     
     for i in range(ITERATIONS):
-        # El comando 'matmul' es el que realmente pone a trabajar los núcleos CUDA
-        result = tf.matmul(matrix1, matrix2)
+        # Multiplicamos
+        res = tf.matmul(a, b)
         
-        # Cada 10 iteraciones imprimimos progreso
-        if (i + 1) % 10 == 0:
-            elapsed = time.time() - start_time
-            print(f"🔹 Iteración {i+1}/{ITERATIONS} - Tiempo acumulado: {elapsed:.2f}s")
+        #  Modificamos 'a' ligeramente para que la siguiente iteración sea distinta
+        #  .numpy() obliga a la GPU a terminar y enviar el dato a la CPU (sincronización)
+        if i % 10 == 0:
+            _ = res.numpy() 
+            print(f"🔹 Iteración {i}/{ITERATIONS}")
+        
+        # Cambiamos un poco la matriz para la siguiente vuelta
+        a = a + 0.01 
 
+    # Sincronización final
+    _ = res.numpy()
     end_time = time.time()
 
-print("\n✅ ¡Test completado!")
-print(f"⏱️ Tiempo total: {end_time - start_time:.2f} segundos.")
+print(f"\n✅ Test completado en: {end_time - start_time:.2f} segundos.")
