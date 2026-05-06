@@ -20,3 +20,4 @@ datasets/
 
 # Env
 *.env
+.vscode/
