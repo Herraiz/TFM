@@ -21,3 +21,5 @@ datasets/
 # Env
 *.env
 .vscode/
+
+wandb/
