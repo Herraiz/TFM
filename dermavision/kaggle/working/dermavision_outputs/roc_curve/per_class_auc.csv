@@ -1,0 +1,9 @@
+Class,AUC
+Actinic keratoses,0.6197
+Basal cell carcinoma,0.6934
+Benign keratosis-like lesions,0.7338
+Dermatofibroma,0.5679
+Melanocytic nevi,0.7247
+Melanoma,0.7186
+Vascular lesions,0.669
+Macro Average,0.6759

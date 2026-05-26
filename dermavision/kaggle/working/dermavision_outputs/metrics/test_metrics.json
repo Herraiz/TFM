@@ -1,0 +1,8 @@
+{
+    "Accuracy": 0.6693,
+    "Precision (W)": 0.448,
+    "Recall (W)": 0.6693,
+    "F1 Score (W)": 0.5367,
+    "AUC Score (Macro)": 0.6753,
+    "Inference/Image (ms)": 99.671
+}
