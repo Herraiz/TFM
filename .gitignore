@@ -1,5 +1,6 @@
 # Entornos virtuales
 venv/
+.venv/
 env/
 .conda/
 
@@ -9,6 +10,7 @@ env/
 *.tflite
 HAM10000/
 data/
+resnet/ham10000/
 
 # Notebooks y archivos temporales
 .ipynb_checkpoints/
