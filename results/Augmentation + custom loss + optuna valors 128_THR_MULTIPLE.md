@@ -3,26 +3,26 @@
 
 ============================================================
 CONFIGURACIÓN DE UMBRALES:
-   - Melanoma: 0.28
-   - Carcinoma Basocelular: Default
-   - Queratosis Actínica: Default
+   - Melanoma: 0.2
+   - Carcinoma Basocelular: 0.2
+   - Queratosis Actínica: 0.1
 
 RENDIMIENTO GLOBAL (Ajuste de Sensibilidad)
-   - Accuracy Test:          0.71
+   - Accuracy Test:          0.72
 ============================================================
 
 ## 📋 REPORTE DETALLADO POR CLASE (SET DE TEST):
                        precision    recall  f1-score   support
 
-  Queratosis actínica       0.48      0.58      0.53        48
-Carcinoma basocelular       0.61      0.68      0.64        66
-   Queratosis benigna       0.61      0.47      0.53       172
-       Dermatofibroma       0.12      0.20      0.15        10
-   Nevus melanocítico       0.95      0.74      0.83      1016
-             Melanoma       0.34      0.78      0.47       186
-      Lesión vascular       0.96      0.83      0.89        29
+  Queratosis actínica       0.50      0.48      0.49        48
+Carcinoma basocelular       0.62      0.74      0.68        66
+   Queratosis benigna       0.65      0.44      0.52       172
+       Dermatofibroma       0.33      0.50      0.40        10
+   Nevus melanocítico       0.95      0.76      0.84      1016
+             Melanoma       0.35      0.81      0.49       186
+      Lesión vascular       0.73      0.83      0.77        29
 
-             accuracy                           0.71      1527
-            macro avg       0.58      0.61      0.58      1527
-         weighted avg       0.80      0.71      0.73      1527
+             accuracy                           0.72      1527
+            macro avg       0.59      0.65      0.60      1527
+         weighted avg       0.80      0.72      0.74      1527
 
