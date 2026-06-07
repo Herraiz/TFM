@@ -11,8 +11,6 @@ env/
 HAM10000/
 data/
 resnet/ham10000/
-servicio/all_images/
-servicio/HAM10000_metadata.csv
 servicio/__pycache__/
 models/baseline2/
 
