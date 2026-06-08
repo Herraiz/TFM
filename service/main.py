@@ -11,7 +11,6 @@ from keras_cv_attention_models import coatnet # Necesario para cargar el modelo 
 from lime import lime_image
 from skimage.segmentation import mark_boundaries, quickshift, slic, felzenszwalb, watershed
 from time import time
-from time import time
 
 app = FastAPI()
 
