@@ -33,6 +33,16 @@ print("#" * 50)
 
 # Para interpretar las predicciones, necesitamos saber el orden de las clases. Tiene que tener mismo orden que en el notebook
 classes = ["akiec", "bcc", "bkl", "df", "nv", "mel", "vasc"]
+translations = {  
+    # Mapeo para códigos cortos a nombres completos
+    'akiec': 'Queratosis actínica (akiec)',
+    'bcc': 'Carcinoma basocelular (bcc)',
+    'bkl': 'Queratosis benigna (bkl)',
+    'df': 'Dermatofibroma (df)',
+    'nv': 'Nevus melanocítico (nv)',
+    'mel': 'Melanoma (mel)',
+    'vasc': 'Lesión vascular (vasc)'
+}
 
 def get_gradcam_heatmap(img_input, meta_input, model, last_conv_layer_name, pred_index):
     """
@@ -122,6 +132,7 @@ async def predict(
 
     # Inferencia usando imagen y metadatos
     scores = model.predict([img_array, meta_array])[0]
+    scores_dict = {translations[cls]: float(score) for cls, score in zip(classes, scores)}
     predicted_class = classes[np.argmax(scores)]
     confidence = float(np.max(scores))
     
@@ -133,8 +144,9 @@ async def predict(
         last_conv_layer_name=LAST_CONV_LAYER_NAME,
         pred_index=np.argmax(scores)
     )
-    
+
     return {
+        "scores": scores_dict,
         "prediction": predicted_class,
         "confidence": confidence,
         "gradcam_image_base64": gradcam_base64
