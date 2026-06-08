@@ -11,6 +11,7 @@ from keras_cv_attention_models import coatnet # Necesario para cargar el modelo 
 from lime import lime_image
 from skimage.segmentation import mark_boundaries, quickshift, slic, felzenszwalb, watershed
 from time import time
+from time import time
 
 app = FastAPI()
 
@@ -126,6 +127,9 @@ async def predict(
     # Inicio del cronometro para medir el tiempo de procesamiento del servicio
     start_time = time()
 
+    # Inicio del cronometro para medir el tiempo de procesamiento del servicio
+    start_time = time()
+
     # Proceso la imagen tal cual la espera el modelo
     contents = await image.read()
     original_pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
@@ -208,7 +212,7 @@ async def predict(
     # Tiempo de ejecucion del servicio
     end_time = time()
     processing_time = end_time - start_time
-    print(f"Tiempo de procesamiento: {processing_time:.2f} segundos")
+    print(f"######### Tiempo de procesamiento: {processing_time:.2f} segundos")
 
     return {
         "scores": scores_dict,
