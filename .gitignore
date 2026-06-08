@@ -11,6 +11,8 @@ env/
 HAM10000/
 data/
 resnet/ham10000/
+servicio/__pycache__/
+models/
 
 # Notebooks y archivos temporales
 .ipynb_checkpoints/
