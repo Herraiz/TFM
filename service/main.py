@@ -126,9 +126,6 @@ async def predict(
     # Inicio del cronometro para medir el tiempo de procesamiento del servicio
     start_time = time()
 
-    # Inicio del cronometro para medir el tiempo de procesamiento del servicio
-    start_time = time()
-
     # Proceso la imagen tal cual la espera el modelo
     contents = await image.read()
     original_pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
