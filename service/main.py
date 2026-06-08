@@ -10,6 +10,7 @@ import shap
 from keras_cv_attention_models import coatnet # Necesario para cargar el modelo aunque no lo use directamente
 from lime import lime_image
 from skimage.segmentation import mark_boundaries, quickshift, slic, felzenszwalb, watershed
+from time import time
 
 app = FastAPI()
 
@@ -122,6 +123,9 @@ async def predict(
     sex: str = Form(...),
     localization: str = Form(...)
 ):
+    # Inicio del cronometro para medir el tiempo de procesamiento del servicio
+    start_time = time()
+
     # Proceso la imagen tal cual la espera el modelo
     contents = await image.read()
     original_pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
@@ -201,6 +205,10 @@ async def predict(
     superimposed_shap.save(buffered, format="JPEG")
     shap_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+    # Tiempo de ejecucion del servicio
+    end_time = time()
+    processing_time = end_time - start_time
+    print(f"Tiempo de procesamiento: {processing_time:.2f} segundos")
 
     return {
         "scores": scores_dict,
