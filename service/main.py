@@ -7,13 +7,13 @@ Endpoints:
 
 import io
 from time import time
-
-import numpy as np
 from fastapi import FastAPI, File, Form, UploadFile
 from PIL import Image
-
-from config import CLASSES
+from pydantic import BaseModel
+from typing import Dict
+from config import CLASS_TRANSLATIONS
 from explainability import get_gradcam_base64, get_lime_base64, get_shap_base64
+from preprocessing import preprocess_image, preprocess_metadata
 from model import (
     get_last_conv_layer_name,
     load_model,
@@ -21,7 +21,7 @@ from model import (
     make_hybrid_predict_fn,
     run_inference,
 )
-from preprocessing import preprocess_image, preprocess_metadata
+
 
 # ---------------------------------------------------------------------------
 # Inicio de la aplicación y carga de artefactos
@@ -42,8 +42,16 @@ print("#" * 50)
 # ---------------------------------------------------------------------------
 # Endpoint de predicción
 # ---------------------------------------------------------------------------
+class PredictionResponse(BaseModel):
+    prediction: str
+    prediction_score: float
+    scores: Dict[str, float]
+    gradcam_image_base64: str
+    lime_image_base64: str
+    shap_image_base64: str
 
-@app.post("/predict")
+
+@app.post("/predict", response_model=PredictionResponse)
 async def predict(
     image: UploadFile = File(...),
     age: float = Form(...),
@@ -68,13 +76,18 @@ async def predict(
     lime_base64 = get_lime_base64(img_array, predict_fn)
     shap_base64 = get_shap_base64(img_array, predict_fn, pred_index)
 
-    print(f"########### Tiempo de procesamiento: {time() - start_time:.2f}s")
+    print("#" * 50)
 
-    return {
-        "scores": result["scores"],
-        "prediction": result["predicted_class"],
-        "confidence": result["confidence"],
-        "gradcam_image_base64": gradcam_base64,
-        "lime_image_base64": lime_base64,
-        "shap_image_base64": shap_base64,
-    }
+    response = PredictionResponse(
+        prediction=CLASS_TRANSLATIONS[result["predicted_class"]],
+        prediction_score=result["confidence"],
+        scores=result["scores"],
+        gradcam_image_base64=gradcam_base64,
+        lime_image_base64=lime_base64,
+        shap_image_base64=shap_base64,
+    )
+
+    print(response.prediction, f"({response.prediction_score:.2f}),", f"Scores: {response.scores}")
+    print(f"Tiempo de procesamiento: {time() - start_time:.2f}s")
+
+    return response
