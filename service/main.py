@@ -6,8 +6,9 @@ import io
 import joblib
 import base64
 import matplotlib.cm as cm
-from keras_cv_attention_models import coatnet
-
+from keras_cv_attention_models import coatnet # Necesario para cargar el modelo aunque no lo use directamente
+from lime import lime_image
+from skimage.segmentation import mark_boundaries, quickshift, slic, felzenszwalb, watershed
 
 app = FastAPI()
 
@@ -43,6 +44,9 @@ translations = {
     'mel': 'Melanoma (mel)',
     'vasc': 'Lesión vascular (vasc)'
 }
+
+# Instancio el explicador LIME una sola vez para reutilizarlo en cada petición
+explainer_lime = lime_image.LimeImageExplainer()
 
 def get_gradcam_heatmap(img_input, meta_input, model, last_conv_layer_name, pred_index):
     """
@@ -136,7 +140,7 @@ async def predict(
     predicted_class = classes[np.argmax(scores)]
     confidence = float(np.max(scores))
     
-    # Genero el mapa de calor Grad-CAM y lo codifico en Base64 para enviarlo en el JSON
+    # 1. Grad-CAM. Genero el mapa de calor Grad-CAM y lo codifico en Base64 para enviarlo en el JSON
     gradcam_base64 = get_gradcam_heatmap(
         img_input=img_array,
         meta_input=meta_array,
@@ -145,9 +149,34 @@ async def predict(
         pred_index=np.argmax(scores)
     )
 
+    # WRAPPER PARA LIME/SHAP
+    def hybrid_predict(batch):
+        m_batch = np.repeat(meta_array, batch.shape[0], axis=0)
+        return model.predict([batch, m_batch], verbose=0)
+
+    # 2. LIME. Genero la explicación LIME y la codifico en Base64 para enviarla en el JSON
+    exp = explainer_lime.explain_instance(
+        img_array[0].astype(np.double),
+        hybrid_predict, 
+        top_labels=1, 
+        num_samples=500,
+        segmentation_fn=lambda x: quickshift(x, kernel_size=3, max_dist=6, ratio=0.5)
+        #segmentation_fn=lambda x: slic(x, n_segments=250, compactness=10, sigma=1, start_label=1)
+        #segmentation_fn=lambda x: felzenszwalb(x, scale=100, sigma=0.5, min_size=50)
+        #segmentation_fn=lambda x: watershed(sobel(rgb2gray(x)), markers=250, compactness=0.001)
+    )
+    temp, mask = exp.get_image_and_mask(exp.top_labels[0], positive_only=True, num_features=5, hide_rest=False)
+    lime_image = mark_boundaries(temp, mask)
+    lime_pil = Image.fromarray((lime_image * 255).astype(np.uint8))
+    buffered = io.BytesIO()
+    lime_pil.save(buffered, format="JPEG")
+    lime_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+
     return {
         "scores": scores_dict,
         "prediction": predicted_class,
         "confidence": confidence,
-        "gradcam_image_base64": gradcam_base64
+        "gradcam_image_base64": gradcam_base64,
+        "lime_image_base64": lime_base64
     }
