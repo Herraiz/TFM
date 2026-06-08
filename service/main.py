@@ -6,6 +6,7 @@ import io
 import joblib
 import base64
 import matplotlib.cm as cm
+import shap
 from keras_cv_attention_models import coatnet # Necesario para cargar el modelo aunque no lo use directamente
 from lime import lime_image
 from skimage.segmentation import mark_boundaries, quickshift, slic, felzenszwalb, watershed
@@ -137,7 +138,8 @@ async def predict(
     # Inferencia usando imagen y metadatos
     scores = model.predict([img_array, meta_array])[0]
     scores_dict = {translations[cls]: float(score) for cls, score in zip(classes, scores)}
-    predicted_class = classes[np.argmax(scores)]
+    pred_idx = np.argmax(scores)
+    predicted_class = classes[pred_idx]
     confidence = float(np.max(scores))
     
     # 1. Grad-CAM. Genero el mapa de calor Grad-CAM y lo codifico en Base64 para enviarlo en el JSON
@@ -146,7 +148,7 @@ async def predict(
         meta_input=meta_array,
         model=model,
         last_conv_layer_name=LAST_CONV_LAYER_NAME,
-        pred_index=np.argmax(scores)
+        pred_index=pred_idx
     )
 
     # WRAPPER PARA LIME/SHAP
@@ -172,11 +174,39 @@ async def predict(
     lime_pil.save(buffered, format="JPEG")
     lime_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+    # 3. SHAP. Genero la explicación SHAP y la codifico en Base64 para enviarla en el JSON
+    #masker = shap.maskers.Image("blur(16,16)", shape=(224, 224, 3))
+    masker = shap.maskers.Image("blur(8,8)", shape=(224, 224, 3))
+    expl_shap = shap.Explainer(hybrid_predict, masker, output_names=classes)
+    #sv = expl_shap(img_array, max_evals=200, batch_size=50)
+    sv = expl_shap(img_array, max_evals=4000, batch_size=124)
+    #abs_s = np.abs(sv.values[0, :, :, :, pred_idx]).sum(axis=-1)
+    shap_map = sv.values[0, :, :, :, pred_idx].sum(axis=-1)
+    #vmax = np.max(np.abs(shap_map))
+    mappable3 = cm.ScalarMappable(cmap="jet")
+    mappable3.set_array([np.min(shap_map), np.max(shap_map)])
+
+    # Superpongo el mapa SHAP a la imagen original usando la paleta 'jet' (rojo = positivo, azul = negativo)
+    shap_map_normalized = (shap_map - np.min(shap_map)) / (np.max(shap_map) - np.min(shap_map) + 1e-10)
+    jet = cm.get_cmap("jet")
+    jet_colors = jet(np.arange(256))[:, :3]
+    jet_shap_map = jet_colors[(shap_map_normalized * 255).astype(int)]
+    jet_shap_map = tf.keras.utils.array_to_img(jet_shap_map)
+    jet_shap_map = jet_shap_map.resize((224, 224))
+    jet_shap_map = tf.keras.utils.img_to_array(jet_shap_map)
+    original_img_array = tf.keras.utils.img_to_array(tf.keras.utils.array_to_img(img_array[0]))
+    superimposed_shap = jet_shap_map * 0.4 + original_img_array
+    superimposed_shap = tf.keras.utils.array_to_img(superimposed_shap)
+    buffered = io.BytesIO()
+    superimposed_shap.save(buffered, format="JPEG")
+    shap_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
 
     return {
         "scores": scores_dict,
         "prediction": predicted_class,
         "confidence": confidence,
         "gradcam_image_base64": gradcam_base64,
-        "lime_image_base64": lime_base64
+        "lime_image_base64": lime_base64,
+        "shap_image_base64": shap_base64
     }
