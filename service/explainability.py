@@ -102,7 +102,7 @@ def _build_gradcam_submodels(model, last_conv_layer_name: str):
     return inner_model, pool_layer, meta_branch, concat_layer, top_model
 
 
-def get_gradcam_base64(
+def get_gradcam(
     img_input: np.ndarray,
     meta_input: np.ndarray,
     model,
@@ -146,7 +146,7 @@ def get_gradcam_base64(
 _lime_explainer = lime_image.LimeImageExplainer()
 
 
-def get_lime_base64(img_input: np.ndarray, predict_fn) -> str:
+def get_lime(img_input: np.ndarray, predict_fn) -> str:
     """
     Genera la explicación LIME para la imagen y la devuelve en Base64.
 
@@ -180,7 +180,7 @@ def get_lime_base64(img_input: np.ndarray, predict_fn) -> str:
 # SHAP
 # ---------------------------------------------------------------------------
 
-def get_shap_base64(img_input: np.ndarray, predict_fn, pred_index: int) -> str:
+def get_shap(img_input: np.ndarray, predict_fn, pred_index: int) -> tuple:
     """
     Genera el mapa SHAP para la clase predicha, lo superpone a la imagen
     original con la paleta 'jet' y devuelve el resultado en Base64.
@@ -195,10 +195,11 @@ def get_shap_base64(img_input: np.ndarray, predict_fn, pred_index: int) -> str:
     sv = explainer(img_input, max_evals=SHAP_MAX_EVALS, batch_size=SHAP_BATCH_SIZE)
 
     shap_map = sv.values[0, :, :, :, pred_index].sum(axis=-1)
+    print(f"SHAP: shape={shap_map.shape} min={shap_map.min()}, max={shap_map.max()}")
     shap_normalized = (shap_map - shap_map.min()) / (shap_map.max() - shap_map.min() + 1e-10)
 
     original_img_array = tf.keras.utils.img_to_array(
         tf.keras.utils.array_to_img(img_input[0])
     )
     superimposed = _apply_jet_overlay(shap_normalized, original_img_array)
-    return _pil_to_base64_jpeg(superimposed)
+    return _pil_to_base64_jpeg(superimposed), (np.min(shap_map), np.max(shap_map))
