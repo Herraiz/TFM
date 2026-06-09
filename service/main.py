@@ -12,7 +12,7 @@ from PIL import Image
 from pydantic import BaseModel
 from typing import Dict
 from config import CLASS_TRANSLATIONS
-from explainability import get_gradcam_base64, get_lime_base64, get_shap_base64
+from explainability import get_gradcam, get_lime, get_shap
 from preprocessing import preprocess_image, preprocess_metadata
 from model import (
     get_last_conv_layer_name,
@@ -49,6 +49,8 @@ class PredictionResponse(BaseModel):
     gradcam_image_base64: str
     lime_image_base64: str
     shap_image_base64: str
+    shap_min: float = None
+    shap_max: float = None
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -72,9 +74,9 @@ async def predict(
     predict_fn = make_hybrid_predict_fn(model, meta_array)
 
     # 3. Explicabilidad
-    gradcam_base64 = get_gradcam_base64(img_array, meta_array, model, LAST_CONV_LAYER_NAME, pred_index)
-    lime_base64 = get_lime_base64(img_array, predict_fn)
-    shap_base64 = get_shap_base64(img_array, predict_fn, pred_index)
+    gradcam_base64 = get_gradcam(img_array, meta_array, model, LAST_CONV_LAYER_NAME, pred_index)
+    lime_base64 = get_lime(img_array, predict_fn)
+    shap_base64, (shap_min, shap_max) = get_shap(img_array, predict_fn, pred_index)
 
     print("#" * 50)
 
@@ -85,6 +87,8 @@ async def predict(
         gradcam_image_base64=gradcam_base64,
         lime_image_base64=lime_base64,
         shap_image_base64=shap_base64,
+        shap_min=shap_min,
+        shap_max=shap_max,
     )
 
     print(response.prediction, f"({response.prediction_score:.2f}),", f"Scores: {response.scores}")
