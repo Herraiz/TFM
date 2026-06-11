@@ -2,7 +2,7 @@
 Constantes y configuración global de la aplicación.
 """
 
-MODEL_PATH = "../models/implementation_jesus_1.keras"
+MODEL_PATH = "../models/implementation_best_1.keras"
 SCALER_PATH = "../models/scaler.pkl"
 ENCODER_PATH = "../models/encoder.pkl"
 

@@ -6,6 +6,8 @@ Endpoints:
 """
 
 import io
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 from time import time
 from fastapi import FastAPI, File, Form, UploadFile
 from PIL import Image
