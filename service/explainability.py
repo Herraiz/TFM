@@ -9,6 +9,8 @@ import io
 import numpy as np
 import tensorflow as tf
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import shap
 from PIL import Image
 from lime import lime_image
@@ -24,6 +26,7 @@ from config import (
     SHAP_MAX_EVALS,
     SHAP_BATCH_SIZE,
     SHAP_BLUR_KERNEL,
+    SHAP_ALPHA,
     CLASSES,
     IMAGE_SIZE,
 )
@@ -180,13 +183,16 @@ def get_lime(img_input: np.ndarray, predict_fn) -> str:
 # SHAP
 # ---------------------------------------------------------------------------
 
+_shap_cmap = LinearSegmentedColormap.from_list("shap", ["#1E88E5", "#ffffff", "#FF0D57"])
+
+
 def get_shap(img_input: np.ndarray, predict_fn, pred_index: int) -> tuple:
     """
-    Genera el mapa SHAP para la clase predicha, lo superpone a la imagen
-    original con la paleta 'jet' y devuelve el resultado en Base64.
+    Genera el mapa SHAP para la clase predicha usando un colormap divergente
+    (azul-blanco-rojo) con normalización por percentil y mezcla ponderada.
 
     Args:
-        img_input: Array (1, H, W, 3) normalizado.
+        img_input: Array (1, H, W, 3) normalizado a [0, 1].
         predict_fn: Función wrapper que acepta un batch y devuelve probabilidades.
         pred_index: Índice de la clase predicha.
     """
@@ -195,11 +201,13 @@ def get_shap(img_input: np.ndarray, predict_fn, pred_index: int) -> tuple:
     sv = explainer(img_input, max_evals=SHAP_MAX_EVALS, batch_size=SHAP_BATCH_SIZE)
 
     shap_map = sv.values[0, :, :, :, pred_index].sum(axis=-1)
-    print(f"SHAP: shape={shap_map.shape} min={shap_map.min()}, max={shap_map.max()}")
-    shap_normalized = (shap_map - shap_map.min()) / (shap_map.max() - shap_map.min() + 1e-10)
 
-    original_img_array = tf.keras.utils.img_to_array(
-        tf.keras.utils.array_to_img(img_input[0])
-    )
-    superimposed = _apply_jet_overlay(shap_normalized, original_img_array)
-    return _pil_to_base64_jpeg(superimposed), (np.min(shap_map), np.max(shap_map))
+    vmax = np.nanpercentile(np.abs(sv.values), 99.9)
+    norm = plt.Normalize(vmin=-vmax, vmax=vmax)
+
+    orig = img_input[0].copy()
+    shap_rgba = _shap_cmap(norm(shap_map))[:, :, :3]
+    blended = np.clip((1 - SHAP_ALPHA) * orig + SHAP_ALPHA * shap_rgba, 0, 1)
+
+    blended_uint8 = (blended * 255).astype(np.uint8)
+    return _array_to_base64_jpeg(blended_uint8), (-vmax, vmax)

@@ -13,13 +13,13 @@ GRADCAM_ALPHA = 0.4  # Opacidad del mapa de calor superpuesto
 CLASSES = ["akiec", "bcc", "bkl", "df", "nv", "mel", "vasc"]
 
 CLASS_TRANSLATIONS = {
-    "akiec": "Queratosis actínica (akiec)",
-    "bcc": "Carcinoma basocelular (bcc)",
-    "bkl": "Queratosis benigna (bkl)",
-    "df": "Dermatofibroma (df)",
-    "nv": "Nevus melanocítico (nv)",
-    "mel": "Melanoma (mel)",
-    "vasc": "Lesión vascular (vasc)",
+    "akiec": "Queratosis actínica",
+    "bcc": "Carcinoma basocelular",
+    "bkl": "Queratosis benigna",
+    "df": "Dermatofibroma",
+    "nv": "Nevus melanocítico",
+    "mel": "Melanoma",
+    "vasc": "Lesión vascular",
 }
 
 # Parámetros de LIME
@@ -30,6 +30,7 @@ LIME_QUICKSHIFT_MAX_DIST = 6 # Distancia máxima para segmentar superpíxeles co
 LIME_QUICKSHIFT_RATIO = 0.5 # Relación entre color y espacio para segmentar superpíxeles con el método quickshift de LIME.
 
 # Parámetros de SHAP
-SHAP_MAX_EVALS = 200 # Más valor implica mayor precisión en el mapa de calor, pero también más tiempo de cómputo y memoria.
+SHAP_MAX_EVALS = 4000 # Más valor implica mayor precisión en el mapa de calor, pero también más tiempo de cómputo y memoria.
 SHAP_BATCH_SIZE = 124 # Tamaño de batch para SHAP. Ajustar según la memoria disponible.
 SHAP_BLUR_KERNEL = "blur(8,8)" # Tamaño del kernel de desenfoque para SHAP. Puede ser "gaussian", "median", "blur" o "box".
+SHAP_ALPHA = 0.5 # Transparencia de la superposición del mapa SHAP sobre la imagen original.
