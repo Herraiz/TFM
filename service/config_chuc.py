@@ -2,10 +2,12 @@
 Constantes y configuración global de la aplicación.
 """
 
-# MODEL_PATH = "../models/implementation_jesus_1.keras"
-MODEL_PATH = "../prod/final_model.keras"
-SCALER_PATH = "../models/scaler.pkl"
-ENCODER_PATH = "../models/encoder.pkl"
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_PATH = PROJECT_ROOT / "prod" / "final_model.keras"
+SCALER_PATH = PROJECT_ROOT / "models" / "scaler.pkl"
+ENCODER_PATH = PROJECT_ROOT / "models" / "encoder.pkl"
 
 IMAGE_SIZE = (224, 224)
 GRADCAM_ALPHA = 0.4  # Opacidad del mapa de calor superpuesto

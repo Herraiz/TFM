@@ -5,7 +5,7 @@ Utilidades de preprocesamiento de imagen y metadatos.
 import numpy as np
 from PIL import Image
 
-from config import IMAGE_SIZE
+from service.config_chuc import IMAGE_SIZE
 
 
 def preprocess_image(pil_image: Image.Image) -> np.ndarray:

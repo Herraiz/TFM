@@ -6,42 +6,30 @@ Endpoints:
 """
 
 import io
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 from time import time
 from fastapi import FastAPI, File, Form, UploadFile
 from PIL import Image
 from pydantic import BaseModel
 from typing import Dict
-from service.config_chuc import CLASS_TRANSLATIONS
-from service.explainability_chuc import get_gradcam, get_lime, get_shap
+from config import CLASS_TRANSLATIONS
+from explainability import get_gradcam, get_lime, get_shap
 from preprocessing import preprocess_image, preprocess_metadata
-from service.model_chuc import (
+from model import (
     get_last_conv_layer_name,
     load_model,
     load_preprocessors,
     make_hybrid_predict_fn,
     run_inference,
 )
-import tensorflow as tf
-from fastapi.middleware.cors import CORSMiddleware
 
 
 # ---------------------------------------------------------------------------
 # Inicio de la aplicación y carga de artefactos
 # ---------------------------------------------------------------------------
 
-# Limpiamos primero la sesión de TensorFlow para evitar conflictos con modelos anteriores
-
-tf.keras.backend.clear_session()
-
 app = FastAPI(title="Skin Lesion Classifier")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # En producción se pone la IP exacta de tu front
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 scaler, encoder = load_preprocessors()
 model = load_model()
