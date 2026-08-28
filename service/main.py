@@ -39,7 +39,7 @@ app = FastAPI(title="Skin Lesion Classifier")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # En producción se pone la IP exacta de tu front
+    allow_origins=["http://chuc1skynet.huc.es:8999"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
